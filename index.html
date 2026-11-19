@@ -1,3 +1,4 @@
+```
 <!doctype html>
 <html lang="it">
 <head>
@@ -31,11 +32,11 @@ main{max-width:1320px;margin:auto;padding:25px 22px 55px}
 .section-icon{width:47px;height:47px;display:grid;place-items:center;flex:0 0 47px;border-radius:14px;border:1px solid #ffffff55;background:#ffffff20;font-size:25px}
 .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 .product{background:#fff;border:1px solid var(--line);border-radius:15px;overflow:hidden;display:flex;flex-direction:column;min-width:0;box-shadow:0 3px 10px #38251b0c}
-.photo-wrap{height:205px;background:#fff;display:grid;place-items:center;position:relative;padding:10px}
-.photo-wrap img{width:100%;height:100%;object-fit:contain}
+.photo-wrap{height:145px;background:#fff;display:grid;place-items:center;position:relative;padding:8px;overflow:hidden}
+.photo-wrap img{width:100%;height:100%;object-fit:contain;cursor:zoom-in}
 .photo-placeholder{font-size:45px;color:#c8b9ac}
-.featured-badge{position:absolute;left:10px;top:10px;background:var(--wine);color:var(--gold);border:1px solid var(--gold);border-radius:5px;padding:5px 8px;font-size:10px;font-weight:bold}
-.product-info{padding:12px;display:flex;flex-direction:column;flex:1}
+.featured-badge{display:none!important}
+.product-info{padding:12px;display:flex;flex-direction:column;flex:1}.product{cursor:pointer}.product button{cursor:pointer}.product h3{overflow-wrap:anywhere}
 .category{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#9b4b5d}
 .product h3{font:17px/1.3 Georgia,serif;margin:7px 0}
 .format{font-size:12px;color:var(--muted);margin:0 0 6px}
@@ -62,12 +63,6 @@ footer{background:#3c242a;color:#f4e9e8;padding:26px 18px;text-align:center;font
 .modal{display:none;position:fixed;inset:0;z-index:40;background:#140c0ecc;padding:18px;overflow:auto}
 .modal.open{display:grid;place-items:center}
 .modal-card{background:#fff;border-radius:14px;width:min(520px,100%);padding:22px}
-.product-detail-card{max-height:90vh;overflow:auto}
-.detail-photo{width:100%;height:210px;object-fit:contain;background:#fff;border:1px solid var(--line);border-radius:10px;margin:12px 0}
-.detail-name{font:25px Georgia,serif;color:var(--wine);margin:8px 0}
-.detail-description{font-size:14px;line-height:1.55;color:var(--muted)}
-.product{cursor:pointer}.product .add{cursor:pointer}
-@media(max-width:700px){.detail-photo{height:175px}.product h3{font-size:14px;line-height:1.25}}
 .modal-head{display:flex;justify-content:space-between;align-items:center}
 .modal-head h2{margin:0;color:var(--wine);font:25px Georgia,serif}
 .close{background:none;border:0;font-size:27px;cursor:pointer}
@@ -83,11 +78,12 @@ footer{background:#3c242a;color:#f4e9e8;padding:26px 18px;text-align:center;font
  .tools{grid-template-columns:1fr;gap:9px}.tools input,.tools select{padding:12px}
  .layout{grid-template-columns:1fr;gap:16px}.cart-panel{position:static;grid-row:1}
  .cart-items{max-height:220px}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
- .photo-wrap{height:112px;padding:5px}.product-info{padding:9px}.product h3{font-size:14px}
+ .photo-wrap{height:112px;padding:5px}.product-info{padding:9px}.product h3{font-size:14px;line-height:1.25}
  .desc{font-size:11px}.price{font-size:16px}.add{font-size:12px;padding:9px 5px}
  .section-title{font-size:17px;min-height:60px;padding:9px 11px}.section-icon{width:40px;height:40px;flex-basis:40px;font-size:22px}
 }
-@media(max-width:370px){.grid{grid-template-columns:1fr}.photo-wrap{height:145px}}
+@media(max-width:370px){.grid{grid-template-columns:1fr}.photo-wrap{height:150px}}
+.detail-image{width:100%;max-height:280px;object-fit:contain;background:#fff;border-radius:10px}.detail-modal{max-width:560px}.detail-modal .price{display:block;margin:12px 0}.detail-actions{display:flex;gap:10px}.detail-actions button{flex:1}
 </style>
 </head>
 <body>
@@ -118,6 +114,12 @@ footer{background:#3c242a;color:#f4e9e8;padding:26px 18px;text-align:center;font
   </div>
 </main>
 
+<div class="modal" id="productModal" aria-hidden="true">
+ <div class="modal-card detail-modal">
+  <div class="modal-head"><h2 id="detailName">Dettaglio prodotto</h2><button class="close" id="closeProduct" aria-label="Chiudi">×</button></div>
+  <div id="detailContent"></div>
+ </div>
+</div>
 <footer><div class="footer-brand">Don Tonino</div>La Puglia di Don Tonino · Cologno Monzese<br>Ordini soggetti a verifica e conferma del negozio. Pagamento previsto in negozio al ritiro.</footer>
 
 <div class="modal" id="orderModal">
@@ -132,13 +134,6 @@ footer{background:#3c242a;color:#f4e9e8;padding:26px 18px;text-align:center;font
    <p class="fineprint">Pagamento in negozio al ritiro. La richiesta sarà confermata solo dopo la verifica di Don Tonino.</p>
    <button class="primary" type="submit" id="sendOrder">Invia richiesta e apri WhatsApp</button>
   </form>
- </div>
-</div>
-
-<div class="modal" id="productModal" aria-hidden="true">
- <div class="modal-card product-detail-card">
-  <div class="modal-head"><h2>Dettaglio prodotto</h2><button class="close" id="closeProduct" aria-label="Chiudi">×</button></div>
-  <div id="productDetailContent"></div>
  </div>
 </div>
 
@@ -244,14 +239,30 @@ function productCard(p,featured){
  const photo=image
  ? `<img src="${esc(image)}" alt="${esc(p.name)}" loading="lazy" referrerpolicy="no-referrer" onerror="this.onerror=null;this.style.display='none';this.parentNode.insertAdjacentHTML('beforeend','<span class=&quot;photo-placeholder&quot;>✦</span>')">`
  : '<span class="photo-placeholder">✦</span>';
- return `<article class="product" data-product="${esc(p.code||p.row)}" tabindex="0" role="button" aria-label="Apri dettagli ${esc(p.name)}">
+ const key=String(p.code||p.row||'');
+ return `<article class="product" data-detail="${esc(key)}" tabindex="0" role="button" aria-label="Apri dettagli ${esc(p.name)}">
   <div class="photo-wrap">${photo}</div>
   <div class="product-info"><div class="category">${esc(p.category||'')}</div><h3>${esc(p.name)}</h3>
   ${p.format?`<p class="format">Formato: ${esc(p.format)}</p>`:''}
   ${p.description?`<p class="desc">${esc(p.description)}</p>`:''}
   <div class="price-line"><span class="price">${euro(price)}</span>${Number(p.promo)>0?`<span class="old-price">${euro(p.price)}</span>`:''}</div>
-  <button class="add" data-add="${esc(p.code||p.row)}">Aggiungi al carrello</button></div></article>`;
+  <button class="add" data-add="${esc(key)}" type="button">Aggiungi al carrello</button></div></article>`;
 }
+function openProduct(key){
+ const p=findProduct(key); if(!p)return;
+ const image=driveImage(p.photo);
+ const price=Number(p.promo)>0?Number(p.promo):Number(p.price);
+ $('detailName').textContent=p.name||'Dettaglio prodotto';
+ $('detailContent').innerHTML=(image?`<img class="detail-image" src="${esc(image)}" alt="${esc(p.name)}" referrerpolicy="no-referrer" onerror="this.style.display='none'">`:'')+
+  `<p class="category">${esc(p.category||'')}</p>`+
+  (p.format?`<p class="format">Formato: ${esc(p.format)}</p>`:'')+
+  (p.description?`<p class="desc">${esc(p.description)}</p>`:'')+
+  `<span class="price">${euro(price)}</span>`+
+  `<button class="primary" id="detailAdd" type="button">Aggiungi al carrello</button>`;
+ $('detailAdd').onclick=()=>{addToCart(String(p.code||p.row));$('productModal').classList.remove('open');};
+ $('productModal').classList.add('open');
+}
+
 function renderCatalog(){
  const query=$('search').value.trim().toLocaleLowerCase('it');
  const filtered=products.filter(p=>(!activeCategory||p.category===activeCategory)&&(!query||(p.name+' '+p.category+' '+(p.description||'')).toLocaleLowerCase('it').includes(query)));
@@ -266,22 +277,8 @@ function renderCatalog(){
   html=`<section class="feature-section"><h2 class="section-title"><span class="section-icon">✦</span>Prodotti</h2><div class="grid">${filtered.length?filtered.map(p=>productCard(p,false)).join(''):'<div class="empty">Nessun prodotto trovato.</div>'}</div></section>`;
  }
  $('catalog').innerHTML=html;
- $('catalog').querySelectorAll('[data-add]').forEach(b=>b.addEventListener('click',()=>addToCart(b.dataset.add)));
- $('catalog').querySelectorAll('.product[data-product]').forEach(card=>{card.addEventListener('click',e=>{if(e.target.closest('[data-add]'))return;openProductDetail(card.dataset.product);});card.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target===card){e.preventDefault();openProductDetail(card.dataset.product);}});});
-}
-function openProductDetail(key){
- const p=findProduct(key);if(!p)return;
- const image=driveImage(p.photo);
- const price=Number(p.promo)>0?Number(p.promo):Number(p.price);
- $('productDetailContent').innerHTML=`${image?`<img class="detail-photo" src="${esc(image)}" alt="${esc(p.name)}" referrerpolicy="no-referrer" onerror="this.style.display='none'">`:''}
-  <div class="category">${esc(p.category||'')}</div>
-  <h3 class="detail-name">${esc(p.name)}</h3>
-  ${p.format?`<p class="format">Formato: ${esc(p.format)}</p>`:''}
-  ${p.description?`<p class="detail-description">${esc(p.description)}</p>`:''}
-  <div class="price-line"><span class="price">${euro(price)}</span>${Number(p.promo)>0?`<span class="old-price">${euro(p.price)}</span>`:''}</div>
-  <button class="primary" id="detailAdd">Aggiungi al carrello</button>`;
- $('detailAdd').onclick=()=>{addToCart(key);$('productModal').classList.remove('open');};
- $('productModal').classList.add('open');$('productModal').setAttribute('aria-hidden','false');
+ $('catalog').querySelectorAll('[data-add]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();addToCart(b.dataset.add);}));
+ $('catalog').querySelectorAll('[data-detail]').forEach(card=>{card.addEventListener('click',e=>{if(e.target.closest('[data-add]'))return;openProduct(card.dataset.detail);});card.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openProduct(card.dataset.detail);}});});
 }
 function findProduct(key){return products.find(p=>String(p.code||p.row)===String(key));}
 function addToCart(key){const p=findProduct(key);if(!p)return;const k=String(p.code||p.row);cart[k]=(cart[k]||0)+1;updateCart();}
@@ -334,16 +331,12 @@ $('orderForm').addEventListener('submit',e=>{
  postForm.appendChild(payload);
  document.body.appendChild(postForm);
  postForm.submit();
- postForm.remove();
- // La risposta di Apps Script (conferma e collegamento WhatsApp) si apre
- // in una nuova scheda; la Bottega resta disponibile nella scheda originale.
- sendButton.textContent='ORDINE INVIATO: CONTROLLA LA NUOVA SCHEDA';
- $('orderModal').classList.remove('open');
- cart={};updateCart();
- setTimeout(()=>{sendButton.disabled=false;sendButton.textContent='Invia richiesta e apri WhatsApp';},3500);
+ // L'ordine viene registrato nella nuova scheda; la Bottega resta disponibile.
+ setTimeout(()=>{sendButton.disabled=false;sendButton.textContent='Invia richiesta e apri WhatsApp';},2500);
 });
 loadCatalog();
 updateCart();
 </script>
 </body>
 </html>
+```
