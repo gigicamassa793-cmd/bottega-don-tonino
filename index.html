@@ -69,6 +69,19 @@ footer{background:#3c242a;color:#f4e9e8;padding:26px 18px;text-align:center;font
 .customer-form label{font-size:13px;color:var(--muted);display:grid;gap:5px}
 .customer-form input,.customer-form textarea{width:100%;padding:12px;border:1px solid var(--line);border-radius:8px}
 .customer-form textarea{min-height:75px}
+
+.product-detail-modal{z-index:60}
+.product-detail-card{position:relative;width:min(560px,100%);max-height:calc(100vh - 36px);overflow:auto;padding:18px}
+.product-detail-close{position:absolute;right:12px;top:12px;z-index:2;background:#fff;border:1px solid var(--line);width:38px;height:38px;border-radius:50%;font-size:26px;line-height:1;cursor:pointer}
+.product-detail-image{height:300px;background:#fbf7ef;border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:16px}
+.product-detail-image img{display:block;width:100%;height:100%;object-fit:contain;object-position:center}
+.product-detail-content{min-width:0}
+.product-detail-content h2{font:25px/1.2 Georgia,serif;color:var(--wine);margin:7px 0 10px}
+.product-detail-content .desc{white-space:pre-line;overflow-wrap:anywhere}
+.product-detail-content .price-line{margin:14px 0}
+.product-detail-content .primary{width:100%;margin-top:6px}
+.photo-wrap[data-detail],.product h3[data-detail]{cursor:pointer}
+.photo-wrap[data-detail]:focus,.product h3[data-detail]:focus{outline:2px solid var(--gold);outline-offset:2px}
 @media(max-width:1050px){.layout{grid-template-columns:minmax(0,1fr) 290px}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:700px){
  .site-head{min-height:112px;padding:10px}.logo{width:min(290px,76vw);max-height:92px}
@@ -81,6 +94,7 @@ footer{background:#3c242a;color:#f4e9e8;padding:26px 18px;text-align:center;font
  .desc{font-size:11px}.price{font-size:16px}.add{font-size:12px;padding:9px 5px}
  .section-title{font-size:17px;min-height:60px;padding:9px 11px}.section-icon{width:40px;height:40px;flex-basis:40px;font-size:22px}
 }
+@media(max-width:700px){.product-detail-card{padding:12px}.product-detail-image{height:230px}.product-detail-content h2{font-size:22px}}
 @media(max-width:370px){.grid{grid-template-columns:1fr}.photo-wrap{height:210px}}
 </style>
 </head>
@@ -113,6 +127,22 @@ footer{background:#3c242a;color:#f4e9e8;padding:26px 18px;text-align:center;font
 </main>
 
 <footer><div class="footer-brand">Don Tonino</div>La Puglia di Don Tonino · Cologno Monzese<br>Ordini soggetti a verifica e conferma del negozio. Pagamento previsto in negozio al ritiro.</footer>
+
+
+<div class="modal product-detail-modal" id="productModal" aria-hidden="true">
+ <div class="modal-card product-detail-card" role="dialog" aria-modal="true" aria-labelledby="detailName">
+  <button class="close product-detail-close" id="closeProductModal" aria-label="Chiudi">×</button>
+  <div class="product-detail-image" id="detailImage"></div>
+  <div class="product-detail-content">
+   <div class="category" id="detailCategory"></div>
+   <h2 id="detailName"></h2>
+   <p class="format" id="detailFormat"></p>
+   <p class="desc" id="detailDescription"></p>
+   <div class="price-line" id="detailPrice"></div>
+   <button class="primary" id="detailAdd" type="button">Aggiungi al carrello</button>
+  </div>
+ </div>
+</div>
 
 <div class="modal" id="orderModal">
  <div class="modal-card">
@@ -232,8 +262,8 @@ function productCard(p,featured){
  ? `<img src="${esc(image)}" alt="${esc(p.name)}" loading="lazy" referrerpolicy="no-referrer" onerror="this.onerror=null;this.style.display='none';this.parentNode.insertAdjacentHTML('beforeend','<span class=&quot;photo-placeholder&quot;>✦</span>')">`
  : '<span class="photo-placeholder">✦</span>';
  return `<article class="product">
-  <div class="photo-wrap">${photo}</div>
-  <div class="product-info"><div class="category">${esc(p.category||'')}</div><h3>${esc(p.name)}</h3>
+  <div class="photo-wrap" data-detail="${esc(p.code||p.row)}" role="button" tabindex="0" aria-label="Apri dettagli ${esc(p.name)}">${photo}</div>
+  <div class="product-info"><div class="category">${esc(p.category||'')}</div><h3 data-detail="${esc(p.code||p.row)}" role="button" tabindex="0">${esc(p.name)}</h3>
   ${p.format?`<p class="format">Formato: ${esc(p.format)}</p>`:''}
   ${p.description?`<p class="desc">${esc(p.description)}</p>`:''}
   <div class="price-line"><span class="price">${euro(price)}</span>${Number(p.promo)>0?`<span class="old-price">${euro(p.price)}</span>`:''}</div>
@@ -256,6 +286,43 @@ function renderCatalog(){
  $('catalog').querySelectorAll('[data-add]').forEach(b=>b.addEventListener('click',()=>addToCart(b.dataset.add)));
 }
 function findProduct(key){return products.find(p=>String(p.code||p.row)===String(key));}
+
+function openProductDetail(key){
+ const p=findProduct(key);if(!p)return;
+ const image=driveImage(p.photo);
+ $('detailImage').innerHTML=image
+  ? `<img src="${esc(image)}" alt="${esc(p.name)}" referrerpolicy="no-referrer" onerror="this.onerror=null;this.style.display='none';">`
+  : '<span class="photo-placeholder">✦</span>';
+ $('detailCategory').textContent=p.category||'';
+ $('detailName').textContent=p.name||'';
+ $('detailFormat').textContent=p.format?'Formato: '+p.format:'';
+ $('detailFormat').style.display=p.format?'':'none';
+ $('detailDescription').textContent=p.description||'';
+ $('detailDescription').style.display=p.description?'':'none';
+ const price=Number(p.promo)>0?Number(p.promo):Number(p.price);
+ $('detailPrice').innerHTML=`<span class="price">${euro(price)}</span>${Number(p.promo)>0?`<span class="old-price">${euro(p.price)}</span>`:''}`;
+ $('detailAdd').dataset.add=String(p.code||p.row);
+ $('productModal').classList.add('open');
+ $('productModal').setAttribute('aria-hidden','false');
+}
+function closeProductDetail(){
+ $('productModal').classList.remove('open');
+ $('productModal').setAttribute('aria-hidden','true');
+}
+$('closeProductModal').onclick=closeProductDetail;
+$('productModal').addEventListener('click',e=>{if(e.target===$('productModal'))closeProductDetail();});
+$('detailAdd').onclick=()=>{addToCart($('detailAdd').dataset.add);closeProductDetail();};
+$('catalog').addEventListener('click',e=>{
+ const target=e.target.closest('[data-detail]');
+ if(target)openProductDetail(target.dataset.detail);
+});
+$('catalog').addEventListener('keydown',e=>{
+ if((e.key==='Enter'||e.key===' ')&&e.target.matches('[data-detail]')){
+  e.preventDefault();openProductDetail(e.target.dataset.detail);
+ }
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('productModal').classList.contains('open'))closeProductDetail();});
+
 function addToCart(key){const p=findProduct(key);if(!p)return;const k=String(p.code||p.row);cart[k]=(cart[k]||0)+1;updateCart();}
 function changeQty(key,delta){cart[key]=(cart[key]||0)+delta;if(cart[key]<=0)delete cart[key];updateCart();}
 function cartEntries(){return Object.entries(cart).map(([key,quantity])=>({p:findProduct(key),quantity})).filter(x=>x.p);}
