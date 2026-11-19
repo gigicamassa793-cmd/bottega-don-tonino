@@ -156,22 +156,56 @@ function iconFor(title){
 }
 function loadCatalog(){
   showCatalogError('Caricamento del catalogo in corso…');
+
+  // Rimuove eventuali richieste precedenti e azzera il timeout.
   const old=document.getElementById('catalogApiScript');
   if(old) old.remove();
+  if(window.donToninoCatalogTimer) clearTimeout(window.donToninoCatalogTimer);
+
+  let completed=false;
+  const script=document.createElement('script');
+  script.id='catalogApiScript';
+  script.async=true;
+
+  function finishWithError(message){
+    if(completed) return;
+    completed=true;
+    clearTimeout(window.donToninoCatalogTimer);
+    script.onerror=null;
+    if(script.parentNode) script.parentNode.removeChild(script);
+    showCatalogError(message);
+  }
+
+  // Callback globale richiesta dall'endpoint JSONP Apps Script.
   window.donToninoCatalog=function(data){
+    if(completed) return;
+    completed=true;
+    clearTimeout(window.donToninoCatalogTimer);
+    script.onerror=null;
+    if(script.parentNode) script.parentNode.removeChild(script);
+
     if(!data || !Array.isArray(data.products)){
-      showCatalogError(data && data.message ? data.message : 'Risposta del catalogo non valida.');
+      showCatalogError(data && data.message ? data.message : 'Il catalogo ha risposto, ma i dati non sono nel formato previsto.');
       return;
     }
+
     products=data.products;
     renderFilters(data.categories||[]);
     renderSectors(data.categories||[]);
     renderCatalog();
   };
-  const script=document.createElement('script');
-  script.id='catalogApiScript';
+
+  script.onerror=function(){
+    finishWithError('Collegamento al catalogo non riuscito. Controlla la connessione e riprova.');
+  };
+
+  // Il parametro univoco evita risposte in cache; il timeout distingue
+  // una richiesta bloccata da una risposta valida.
   script.src=API_URL+'?action=catalog&callback=donToninoCatalog&_='+Date.now();
-  script.onerror=()=>showCatalogError('Non riesco a collegarmi al catalogo. Riprova tra qualche minuto.');
+  window.donToninoCatalogTimer=setTimeout(function(){
+    finishWithError('Google non ha completato la risposta del catalogo. Riprova tra poco.');
+  },20000);
+
   document.head.appendChild(script);
 }
 function showCatalogError(msg){$('catalog').innerHTML='<div class="status">'+esc(msg)+'</div>';}
